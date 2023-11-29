@@ -1,57 +1,68 @@
-const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json"
+// Define the URL
+const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json";
 
+// Fetch the data once
 d3.json(url).then(function(data) {
-    console.log(data);
+    // Call the init function and pass the data
+    init(data);
 });
 
-function init() {
+// Function to initialize the visualization
+function init(data) {
     let dropdownMenu = d3.select("#selDataset");
 
-    d3.json(url).then((data) => {
-        let names = data.names;
+    let names = data.names;
 
-        names.forEach((id) => {
-            dropdownMenu.append("option")
-                .text(id)
-                .property("value", id);
-        });
+    names.forEach((id) => {
+        dropdownMenu.append("option")
+            .text(id)
+            .property("value", id);
+    });
 
-        dropdownMenu.on("change", function () {
-            let selectedSample = dropdownMenu.property("value");
-            buildMetadata(selectedSample);
-            buildBar(selectedSample);
-            buildBubble(selectedSample);
-        });
+    dropdownMenu.on("change", function () {
+        let selectedSample = dropdownMenu.property("value");
+        buildMetadata(data, selectedSample);
+        buildBubble(data, selectedSample);
+    });
 
-        let first_sample = names[0];
-        buildMetadata(first_sample);
-        buildBar(first_sample);
-        buildBubble(first_sample);
+    let first_sample = names[0];
+    buildMetadata(data, first_sample);
+    buildBubble(data, first_sample);
+}
+
+// Function to build metadata
+function buildMetadata(data, sample) {
+    let metadata = data.metadata;
+    let value = metadata.find(result => result.id == sample);
+
+    let metadataDisplay = d3.select("#sample-metadata");
+    metadataDisplay.html("");
+
+    Object.entries(value).forEach(([key, value]) => {
+        metadataDisplay.append("h5").text(`${key}: ${value}`);
     });
 }
 
-function buildMetadata(sample) {
+// Function to build bubble chart
+function buildBubble(data, sample) {
+    let allSamples = data.samples;
+    let value = allSamples.find(result => result.id == sample);
 
-    d3.json(url).then((data) => {
+    let trace = {
+        x: value.otu_ids,
+        y: value.sample_values,
+        text: value.otu_labels,
+        mode: "markers",
+        marker: {
+            size: value.sample_values,
+            color: value.otu_ids,
+            colorscale: "Earth"
+        }
+    };
 
-        let metadata = data.metadata;
+    let layout = {
+        title: "Top 10 OTUs Present"
+    };
 
-        let value = metadata.filter(result => result.id == sample);
-
-        console.log(value)
-
-        let valueData = value[0];
-
-        d3.select("#sample-metadata").html("");
-
-        Object.entries(valueData).forEach(([key,value]) => {
-
-            console.log(key,value);
-
-            d3.select("#sample-metadata").append("h5").text(`${key}: ${value}`);
-        });
-    });
-
-};
-
-init();
+    Plotly.newPlot("bubble", [trace], layout);
+}
