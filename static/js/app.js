@@ -43,6 +43,26 @@ function buildMetadata(data, sample) {
     });
 }
 
+// Function to build bar chart
+function buildBar(data, sample) {
+    let allSamples = data.samples;
+    let value = allSamples.find(result => result.id == sample);
+
+    let trace = {
+        x: value.sample_values.slice(0, 10).reverse(),
+        y: value.otu_ids.slice(0, 10).reverse(),
+        text: value.otu_labels.slice(0, 10).reverse(),
+        type: "bar",
+        orientation: "h"
+    };
+
+    let layout = {
+        title: "Top 10 OTUs Found"
+    };
+
+    Plotly.newPlot("bar", [trace], layout);
+}
+
 // Function to build bubble chart
 function buildBubble(data, sample) {
     let allSamples = data.samples;
